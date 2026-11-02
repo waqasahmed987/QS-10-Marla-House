@@ -6,16 +6,19 @@ Deploy:        push this folder to GitHub, then create an app on share.streamlit
 import streamlit as st
 
 from core.loader import DEFAULT_WORKBOOK, default_workbook_bytes, load_sheets, workbook_has_values
+from core.theme import apply_theme, brand_block
 from views import PAGES
 
-st.set_page_config(page_title="10 Marla House – QS Dashboard", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="QS Controls – 10 Marla House", page_icon="🛡️", layout="wide")
+apply_theme()
 
 # ---------------- sidebar: data source & navigation
 with st.sidebar:
-    st.markdown("### 🏠 10 Marla House QS Dashboard")
-    st.caption("Kohistan Enclave, Wah Cantt · MRS Rawalpindi 2026 vs market rates")
+    brand_block()
     labels = [f"{p.ICON} {p.TITLE}" for p in PAGES]
-    choice = st.radio("Go to", labels, index=0, label_visibility="collapsed")
+    if st.session_state.get("nav") not in labels:
+        st.session_state["nav"] = labels[0]
+    choice = st.radio("Go to", labels, key="nav", label_visibility="collapsed")
 
     st.divider()
     uploaded = st.file_uploader("Use an updated workbook (.xlsx)", type=["xlsx"],

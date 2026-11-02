@@ -6,7 +6,9 @@ workbook as interactive tables, charts and filters:
 
 | Page | Workbook sheet(s) |
 |---|---|
+| ✨ Home | Landing page: hero, live payment card, BOQ register card, rate-overrun alert |
 | 🏠 Overall Summary | Overall Summary |
+| 🤖 AI Assistant (Groq) | Answers questions from all sheets (needs a Groq API key) |
 | 🏗️ Contractor Option 1 | Contractor Option 1 (Kohistan Arena Real Estate & Builders) |
 | 🔑 Rent vs Own | Rent vs Own (+ what-if rent calculator) |
 | ⚖️ Options A–D & Other Costs | Summary, Other Costs, Option D - Owner Supply |
@@ -32,6 +34,7 @@ qs_house_app/
 ├── README.md
 ├── .gitignore
 ├── .streamlit/config.toml # theme + upload size
+├── .streamlit/secrets.toml.example  # template for GROQ_API_KEY (never commit the real one)
 ├── data/
 │   └── 10_Marla_House_MRS_vs_Market_Wah_Cantt.xlsx
 ├── core/                  # reusable logic (no page layout here)
@@ -40,7 +43,9 @@ qs_house_app/
 │   ├── extract.py         # one function per sheet -> tidy DataFrames
 │   ├── ui.py              # number formatting, tables, metric cards, downloads
 │   ├── charts.py          # Plotly chart builders (S-curve, Gantt, bars, lines, pie)
-│   └── calc.py            # what-if calculators (rent schedule)
+│   ├── theme.py           # dark UI: global CSS, fonts, hero/pill/card/alert components
+│   ├── calc.py            # what-if calculators (rent schedule)
+│   └── ai.py              # Groq key lookup + workbook context for the AI assistant
 └── views/                 # one file per page; each has TITLE, ICON and render(sheets)
     ├── __init__.py        # PAGES registry (order of the sidebar)
     ├── overview.py  contractor.py  rent.py  costs.py  cashflow.py  boq.py  mrs.py
@@ -88,6 +93,41 @@ qs_house_app/
 
 ---
 
+## Adding your Groq API key (for the 🤖 AI Assistant page)
+
+### 1. Get a key
+1. Go to **https://console.groq.com** and sign in (Google/GitHub/email).
+2. Left menu **API Keys → Create API Key**, give it a name (e.g. `qs-house-app`), click **Submit**.
+3. **Copy the key immediately** – it starts with `gsk_` and is shown only once.
+
+### 2a. On Streamlit Community Cloud (the deployed app)
+1. Open **https://share.streamlit.io**, find your app, click **⋮ → Settings → Secrets**.
+2. Paste exactly this line (TOML format – name in capitals, key in double quotes), then **Save**:
+   ```toml
+   GROQ_API_KEY = "gsk_your_key_here"
+   ```
+3. The app restarts in a few seconds; open the **🤖 AI Assistant** page.
+
+### 2b. On your own computer
+1. Copy `.streamlit/secrets.toml.example` to **`.streamlit/secrets.toml`** (same folder as `config.toml`).
+2. Put your key in it:
+   ```toml
+   GROQ_API_KEY = "gsk_your_key_here"
+   ```
+3. Run `streamlit run app.py`.
+
+Alternative: set an environment variable `GROQ_API_KEY`, or paste the key in the sidebar of the AI page (kept for that
+browser session only).
+
+### Rules
+- **Never upload `secrets.toml` or your key to GitHub** (it is already in `.gitignore`). If a key leaks, delete it in
+  console.groq.com and create a new one.
+- Models: the app offers `openai/gpt-oss-120b` (default) and `openai/gpt-oss-20b`. Groq moved the Llama models to
+  Enterprise-only in Aug 2026; if Groq changes its model list, edit `MODELS` in `core/ai.py`.
+- Free-tier limits are per minute/day; if you see a 429 error wait a minute or switch to the 20B model.
+
+---
+
 ## Run on your own computer (optional)
 
 ```bash
@@ -112,6 +152,14 @@ git push -u origin main
 ```
 
 ---
+
+## Changing the look (core/theme.py)
+- **Brand name / subtitle:** edit `BRAND`, `BRAND_SUB`, `VERSION` at the top of `core/theme.py`.
+- **Colours:** edit the `C` palette (orange accent `#F59E0B`, navy background `#0A0F1E`) and the matching
+  colours in `.streamlit/config.toml`; chart colours are `PALETTE` in `core/charts.py`.
+- **Fonts:** Archivo (headings), Inter (text) and JetBrains Mono (numbers/codes) load from Google Fonts in the CSS `@import`.
+- **Reusable components** for any page: `theme.pill()`, `theme.hero()`, `theme.stats()`, `theme.summary_card()`,
+  `theme.register_card()`, `theme.alert_card()`, `theme.section()`.
 
 ## Extending the app (modular design)
 
@@ -146,6 +194,8 @@ Header-text search keeps working when rows move.
 | "This page could not be built" | A sheet's headers were renamed or deleted. Restore the layout or check the page under **All Sheets (raw)**. |
 | "no calculated values" | Open the workbook in Excel, press **Save**, upload again. |
 | Upload too large | Limit is 50 MB (`.streamlit/config.toml`). |
+| AI page: "No Groq API key found" | Add `GROQ_API_KEY` in **Settings → Secrets** exactly as shown above, then reboot the app. |
+| AI page: 401 / invalid key | The key was mistyped or deleted - create a new key in console.groq.com. |
 | App sleeps after inactivity | Normal on the free tier – open the link and click **Wake up**. |
 
 *Figures are QS estimates for decision-making. Verify MRS rates against the official PDF, society charges with Kohistan Enclave and contractor quotations before signing.*

@@ -4,10 +4,19 @@ from __future__ import annotations
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 
-PALETTE = ["#1F3864", "#C00000", "#70AD47", "#ED7D31", "#4472C4", "#A5A5A5", "#FFC000", "#5B9BD5", "#264478", "#9E480E"]
-LAYOUT = dict(margin=dict(l=10, r=10, t=50, b=10), legend=dict(orientation="h", y=-0.2), font=dict(family="Arial"))
+PALETTE = ["#F59E0B", "#3B82F6", "#10B981", "#A78BFA", "#F43F5E", "#FACC15", "#22D3EE", "#EA7A0C", "#94A3B8", "#6366F1"]
+LAYOUT = dict(margin=dict(l=10, r=10, t=50, b=10), legend=dict(orientation="h", y=-0.2))
+
+# dark, transparent template matching core/theme.py - applies to every Plotly figure in the app
+pio.templates["qs"] = go.layout.Template(layout=dict(
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", colorway=PALETTE,
+    font=dict(family="Inter, sans-serif", color="#E6EAF2"), title=dict(font=dict(family="Archivo, sans-serif", size=18)),
+    xaxis=dict(gridcolor="rgba(148,163,184,0.12)", zerolinecolor="rgba(148,163,184,0.2)"),
+    yaxis=dict(gridcolor="rgba(148,163,184,0.12)", zerolinecolor="rgba(148,163,184,0.2)")))
+pio.templates.default = "plotly_dark+qs"
 
 
 def bar_compare(labels, values, title, colors=None):
